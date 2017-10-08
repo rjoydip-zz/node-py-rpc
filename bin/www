@@ -11,8 +11,8 @@ var http = require('http');
 /**
  * Get port from environment and store in Express.
  */
-
-var port = normalizePort(process.env.PORT || Math.random() * (9999 - 3000) + 3000);
+// Math.random() * (9999 - 3000) + 3000
+var port = normalizePort(process.env.PORT || 4010);
 app.set('port', port);
 
 /**

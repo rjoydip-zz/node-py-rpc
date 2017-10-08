@@ -4,6 +4,9 @@ var logger = require('morgan');
 var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
 
+var path = require('path');
+var spawn = require('child_process').spawn;
+
 var zmq = require('zeromq')
 var rpc = zmq.socket('rep')
 
@@ -22,32 +25,55 @@ app.use(bodyParser.urlencoded({
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
-app.use('/', function (req, res) {
+function openPyTerminal() {
+  var dataString = '';
+  var py = spawn('python', [
+    path.join(__dirname, 'main.py')
+  ], {
+    env: Object.create(process.env)
+  });
+
+  py.stdout.on('data', function (data) {
+    dataString += data.toString();
+  });
+}
+
+rpc.bind('tcp://*:8688', function (err) {
+  if (err) console.log(err)
+  else {
+    openPyTerminal();
+    console.log('Node RPC running on 8688');
+  }
+});
+
+rpc.on('message', function (payload) {
+  var paylaod = JSON.parse(payload.toString());
+  console.log("Node payload",paylaod);
+});
+
+app.get('/', function (req, res) {
   return res.status(200).send({
     message: "Welcome to node-py-rpc"
   });
 });
 
-rpc.on('message', function (request) {
-  rpc.send('OK')
-});
-
-rpc.bind('tcp://*:8688', function (err) {
-  if (err)
-    console.log(err)
-  else
-    console.log('RPC running on 8688')
-});
-
-app.use('/rpc', function (req, res) {
-  return res.status(200).send({
-    message: "Welcome to node-py-rpc"
+app.get('/rpc', function (req, res) {
+  rpc.send(JSON.stringify({
+    cmd: 'rpc'
+  }));
+  rpc.on('message', function (payload) {
+    var paylaod = JSON.parse(payload.toString());
+    return res.status(200).send({payload});
   });
 });
 
 process.on('exit', (code) => {
+  rpc.send(JSON.stringify({
+    'cmd': 'exit',
+    'payload': 'terminal exit'
+  }));
   rpc.close();
-  console.log("server and rpc connection closes with exit code" + code);
+  console.log("Node server and rpc connection closes with exit code" + code);
 });
 
 // catch 404 and forward to error handler
