@@ -27,14 +27,16 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 function openPyTerminal() {
   var dataString = '';
+  
   var py = spawn('python', [
-    path.join(__dirname, 'main.py')
+    './main.py'
   ], {
     env: Object.create(process.env)
   });
 
   py.stdout.on('data', function (data) {
     dataString += data.toString();
+    process.stdout.write(dataString)
   });
 }
 
