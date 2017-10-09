@@ -27,7 +27,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 function openPyTerminal() {
   var dataString = '';
-  
+
   var py = spawn('python', [
     './main.py'
   ], {
@@ -35,22 +35,21 @@ function openPyTerminal() {
   });
 
   py.stdout.on('data', function (data) {
-    dataString += data.toString();
-    process.stdout.write(dataString)
+    process.stdout.write(data.toString())
   });
 }
 
 rpc.bind('tcp://*:8688', function (err) {
+  console.log('Node RPC running on 8688')
   if (err) console.log(err)
   else {
     openPyTerminal();
-    console.log('Node RPC running on 8688');
   }
 });
 
 rpc.on('message', function (payload) {
   var paylaod = JSON.parse(payload.toString());
-  console.log("Node payload",paylaod);
+  console.log("Node payload", paylaod);
 });
 
 app.get('/', function (req, res) {
@@ -59,13 +58,15 @@ app.get('/', function (req, res) {
   });
 });
 
-app.get('/rpc', function (req, res) {
+app.get('/send', function (req, res) {
   rpc.send(JSON.stringify({
-    cmd: 'rpc'
+    cmd: 'send'
   }));
   rpc.on('message', function (payload) {
     var paylaod = JSON.parse(payload.toString());
-    return res.status(200).send({payload});
+    return res.status(200).send({
+      payload
+    });
   });
 });
 
