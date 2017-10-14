@@ -25,4 +25,4 @@ $ npm start
 
 ***ISSUE***
 
-> Right now python code communicate once first time when route will be called. From 2nd time onwards it will not execute.
+> Right now python code communicate once route will be called. From 2nd time onwards it will not execute.
