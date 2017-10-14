@@ -58,10 +58,8 @@ app.get('/', function (req, res) {
 app.get('/send', function (req, res) {
   openPyTerminal('send', '1');
   rpc.on('message', function (payload) {
-    console.log("Node recieve send payload", payload);
-    var paylaod = new Buffer(payload).toString('ascii');
     return res.status(200).send({
-      payload
+      payload: JSON.parse(payload.toString())
     });
   });
 });
