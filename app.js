@@ -25,12 +25,11 @@ app.use(bodyParser.urlencoded({
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
-function openPyTerminal(method = 'main', _args = null) {
+function openPyTerminal(method = 'conn', paylaod = null) {
   var dataString = '';
+  var args_arr = method && paylaod ? [`./main.py`, method] : ['./main.py'];
 
-  var py = spawn('python', [
-    `./main.py ${method}`
-  ], {
+  var py = spawn('python', args_arr , {
     env: Object.create(process.env)
   });
 
@@ -42,9 +41,7 @@ function openPyTerminal(method = 'main', _args = null) {
 rpc.bind('tcp://127.0.0.1:8688', function (err) {
   console.log('Node RPC running on 8688');
   if (err) console.log(err);
-  else {
-    openPyTerminal();
-  }
+  else openPyTerminal();
 });
 
 rpc.on('message', function (payload) {
@@ -59,10 +56,10 @@ app.get('/', function (req, res) {
 });
 
 app.get('/send', function (req, res) {
-  openPyTerminal('__send');
+  openPyTerminal('send', '1');
   rpc.on('message', function (payload) {
-    console.log("Node send payload", payload);
-    var paylaod = JSON.parse(payload.toString());
+    console.log("Node recieve send payload", payload);
+    var paylaod = new Buffer(payload).toString('ascii');
     return res.status(200).send({
       payload
     });
@@ -70,10 +67,12 @@ app.get('/send', function (req, res) {
 });
 
 process.on('exit', (code) => {
-  rpc.send(JSON.stringify({
-    'cmd': 'exit',
-    'payload': '-1'
-  }));
+  rpc.send(
+    JSON.stringify({
+      'cmd': 'exit',
+      'payload': '-1'
+    })
+  );
   rpc.close();
   console.log("Node server and rpc connection closes with exit code" + code);
 });

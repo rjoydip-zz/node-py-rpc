@@ -15,47 +15,45 @@ rpc = context.socket(zmq.REQ)
 rpc.connect(TCP_URL)
 print("Python RPC conncted with server")
 
-# connection success payload
-rpc.send_json({'cmd': 'conn', 'payload': 'success'})
-
 # print message using sys
 def print(message):
-    sys.stdout.write(message + "\n")
+    sys.stdout.write(str(message) + "\n")
     return
 
 # send json payload
 def __send_json(cmd, payload):
     try:
         rpc.send_json({'cmd': cmd, 'paylod': payload})
-        print('Payload send successfully')
+        print('Python payload send successfully')
     except Exception as e:
-        print(str(e))
+        print(e)
     return
 
+# exit process and method method
+def _exit():
+    print("Exit python process and closing RPC")
+    rpc.close()
+    sys.exit(0)
+    return
+    
 # send method
-def __conn():
-    print("__conn working")
+def conn():
+    print("Python conn working")
     __send_json('conn', 'success')
     return
 
 # send method
-def __exit():
-    print("exit python process")
-    rpc.close()
-    sys.exit(0)
-    return
-
-# send method
-def __send():
-    print("__send working")
+def send():
+    print("Python send working")
     __send_json('send', '1')
     return
-
-# main function
+    
 @execute
-def main():  
-    print("Main method start working")
+def main():
     return
 
-if (__name__ == "__main__"):
-    main()
+if (__name__ == "__main__"): 
+    try:
+        main()
+    except KeyboardInterrupt:
+        _exit()
